@@ -9,6 +9,8 @@ const sock = makeWASocket({
 })
 sock.ev.on('creds.update', saveCreds)
 
+const gwaid = ""
+
 sock.ev.on("connection.update", handleConnectionUpdate);
 async function handleConnectionUpdate(update: any) {
     const { qr, connection, lastDisconnect } = update;
@@ -30,7 +32,28 @@ async function handleConnectionUpdate(update: any) {
     }
 }
 
+sock.ev.on("messages.upsert", async (m) => {
+  const msg = m.messages[0]
+  if (msg.key.fromMe) return;
+  if (!msg.message) return;
+  if(msg.message.extendedTextMessage) {
+
+  }
+});
+
 const app = new Hono()
+app.post('/minecraft', async (c) => {
+  const { message } = await c.req.json()
+
+  c.text('Message sent to Minecraft!')
+});
+
+app.post('/whatsapp', async (c) => {
+  const { message } = await c.req.json()
+  sock.sendMessage(gwaid, {text: message})
+  c.text('Message sent to Whatsapp!')
+})
+
 
 app.get('/', (c) => {
   return c.text('Hello Hono!')
