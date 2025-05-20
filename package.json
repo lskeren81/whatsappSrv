@@ -1,0 +1,15 @@
+{
+  "name": "whatsappsrv",
+  "module": "index.ts",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "baileys": "whiskeysockets/baileys"
+  }
+}
