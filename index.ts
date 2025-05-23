@@ -1,15 +1,15 @@
 import { Hono } from 'hono'
 import { makeWASocket,useMultiFileAuthState } from 'baileys';
 import qrcode from "qrcode-terminal";
+import * as fs from "fs";
+const data = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 
-const { state, saveCreds } = await useMultiFileAuthState('auth_info')
+const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys')
 const sock = makeWASocket({
   auth: state,
   syncFullHistory: false
 })
 sock.ev.on('creds.update', saveCreds)
-
-const gwaid = ""
 
 sock.ev.on("connection.update", handleConnectionUpdate);
 async function handleConnectionUpdate(update: any) {
@@ -32,28 +32,36 @@ async function handleConnectionUpdate(update: any) {
     }
 }
 
-sock.ev.on("messages.upsert", async (m) => {
-  const msg = m.messages[0]
-  if (msg.key.fromMe) return;
-  if (!msg.message) return;
-  if(msg.message.extendedTextMessage) {
-
-  }
-});
+sock.ev.on("messages.upsert", async (msg) => {
+    const message = msg.messages[0];
+    if(message.message?.extendedTextMessage){
+      console.log("Received message:", message.message.extendedTextMessage.text);
+    }
+    if(message.message?.extendedTextMessage?.text === "helo"){
+      if (message.key.remoteJid) {
+        sock.sendMessage(message.key.remoteJid, {text: "Hello!"})
+      }
+    }
+        if(message.message?.extendedTextMessage?.text == "!set") {
+        if (message.key.remoteJid) {
+        if (!data.uidwa || message.key.remoteJid === data.uidwa + "@c.us") {
+        sock.sendMessage(message.key.remoteJid, { text: "You do not have permission to use this command." });
+    }
+    else {
+            const id = message.key.remoteJid;
+            data.gwaid = id;
+            fs.writeFileSync('id.json', JSON.stringify(data, null, 4));
+            sock.sendMessage(message.key.remoteJid, { text: "GroupID set to: " + id });
+        }
+    }
+}})
 
 const app = new Hono()
-app.post('/minecraft', async (c) => {
-  const { message } = await c.req.json()
-
-  c.text('Message sent to Minecraft!')
-});
-
 app.post('/whatsapp', async (c) => {
   const { message } = await c.req.json()
-  sock.sendMessage(gwaid, {text: message})
+  sock.sendMessage(data.gwaid, {text: message})
   c.text('Message sent to Whatsapp!')
 })
-
 
 app.get('/', (c) => {
   return c.text('Hello Hono!')
