@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { makeWASocket,useMultiFileAuthState } from 'baileys';
 import qrcode from "qrcode-terminal";
 import * as fs from "fs";
+import { spawn } from 'child_process';
 const data = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 
 const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys')
@@ -12,6 +13,19 @@ const sock = makeWASocket({
 sock.ev.on('creds.update', saveCreds)
 
 sock.ev.on("connection.update", handleConnectionUpdate);
+
+function restartApp(delayInMinutes: number) {
+    const delayInMilliseconds = delayInMinutes * 60 * 1000; // Convert minutes to milliseconds
+    console.log(`Restarting the application in ${delayInMinutes} minute(s)...`);
+    setTimeout(() => {
+        spawn(process.argv[0], process.argv.slice(1), {
+            stdio: 'inherit',
+            detached: true,
+        }).unref();
+        process.exit(0);
+    }, delayInMilliseconds);
+}
+
 async function handleConnectionUpdate(update: any) {
     const { qr, connection, lastDisconnect } = update;
     if (qr) {
@@ -26,6 +40,7 @@ async function handleConnectionUpdate(update: any) {
             const newSock = makeWASocket({ syncFullHistory: false, auth: state });
             newSock.ev.on("creds.update", saveCreds);
             newSock.ev.on("connection.update", handleConnectionUpdate);
+            restartApp(3);
         } else {
             console.log("Session ended. Delete auth_info_baileys and restart to generate a new QR.");
         }
