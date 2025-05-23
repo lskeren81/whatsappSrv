@@ -45,7 +45,7 @@ async function handleConnectionUpdate(update: any) {
             const newSock = makeWASocket({ syncFullHistory: false, auth: state });
             newSock.ev.on("creds.update", saveCreds);
             newSock.ev.on("connection.update", handleConnectionUpdate);
-            restartApp(20000);
+            restartApp(10000);
         } else {
             console.log("Session ended. Delete auth_info_baileys and restart to generate a new QR.");
         }
