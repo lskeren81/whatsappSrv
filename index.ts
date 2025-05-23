@@ -14,16 +14,21 @@ sock.ev.on('creds.update', saveCreds)
 
 sock.ev.on("connection.update", handleConnectionUpdate);
 
-function restartApp(delayInMinutes: number) {
-    const delayInMilliseconds = delayInMinutes * 60 * 1000; // Convert minutes to milliseconds
-    console.log(`Restarting the application in ${delayInMinutes} minute(s)...`);
+function restartApp(delay: number) {
+    console.log(`
+██████  ███████ ██████  ██    ██ ███    ██ 
+██   ██ ██      ██   ██ ██    ██ ████   ██ 
+██████  █████   ██████  ██    ██ ██ ██  ██ 
+██   ██ ██      ██   ██ ██    ██ ██  ██ ██ 
+██   ██ ███████ ██   ██  ██████  ██   ████
+The application in ${delay / 1000} seconds....`);
     setTimeout(() => {
         spawn(process.argv[0], process.argv.slice(1), {
             stdio: 'inherit',
             detached: true,
         }).unref();
         process.exit(0);
-    }, delayInMilliseconds);
+    }, delay);
 }
 
 async function handleConnectionUpdate(update: any) {
@@ -40,7 +45,7 @@ async function handleConnectionUpdate(update: any) {
             const newSock = makeWASocket({ syncFullHistory: false, auth: state });
             newSock.ev.on("creds.update", saveCreds);
             newSock.ev.on("connection.update", handleConnectionUpdate);
-            restartApp(3);
+            restartApp(20000);
         } else {
             console.log("Session ended. Delete auth_info_baileys and restart to generate a new QR.");
         }
